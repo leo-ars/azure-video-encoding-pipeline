@@ -7,8 +7,8 @@ from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential
 
-keyVaultName = "encodingkv"
-KVUri = f"https://{keyVaultName}.vault.azure.net"
+KEYVAULT_NAME = "encodingkv"
+KVUri = f"https://{KEYVAULT_NAME}.vault.azure.net"
 
 credential = DefaultAzureCredential()
 client = SecretClient(vault_url=KVUri, credential=credential)
@@ -18,14 +18,14 @@ client = SecretClient(vault_url=KVUri, credential=credential)
 connect_str_input = client.get_secret("connectStrInput")
 connect_str_output = client.get_secret("connectStrOutput")
 connect_str_servicebus = client.get_secret("connectStrServicebus")
-queue_name = "main"
+QUEUE_NAME = "main"
 
-output_container_name = "main"
+OUTPUT_CONTAINER_NAME = "main"
 
 #Local variables
 
-upload_file_path = "output.mp4"
-download_file_path = "input.mp4"
+UPLOAD_FILE_PATH = "output.mp4"
+DOWNLOAD_FILE_PATH = "input.mp4"
 
 
 def downloadBlob(connect_str, container_name, blob_name, local_file_path):
@@ -97,7 +97,7 @@ while True:
     print("Waiting for messages...")
     renewer = AutoLockRenewer()
     with ServiceBusClient.from_connection_string(connect_str_servicebus.value) as client:
-        with client.get_queue_receiver(queue_name) as receiver:
+        with client.get_queue_receiver(QUEUE_NAME) as receiver:
             for msg in receiver.receive_messages():
                 renewer.register(receiver, msg, max_lock_renewal_duration=86400)
 
@@ -105,9 +105,9 @@ while True:
 
                 output_blob_name  = "encoded_" + input_blob_name
 
-                downloadBlob(connect_str_input, input_container_name, input_blob_name, download_file_path)
-                runFfmpeg(download_file_path, upload_file_path)
-                uploadBlob(connect_str_output, output_container_name, output_blob_name, upload_file_path)
+                downloadBlob(connect_str_input, input_container_name, input_blob_name, DOWNLOAD_FILE_PATH)
+                runFfmpeg(DOWNLOAD_FILE_PATH, UPLOAD_FILE_PATH)
+                uploadBlob(connect_str_output, OUTPUT_CONTAINER_NAME, output_blob_name, UPLOAD_FILE_PATH)
 
                 receiver.complete_message(msg)
     renewer.close()
